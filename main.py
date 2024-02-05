@@ -1,3 +1,4 @@
+import datetime
 import re
 import json
 from typing import TypedDict
@@ -5,6 +6,7 @@ from typing import TypedDict
 import requests
 
 from config import API_KEY, CHAT_ID
+from logger import logger
 
 
 class Issue(TypedDict):
@@ -86,11 +88,15 @@ def write_last_issue_id(issue_id: int):
 
 
 if __name__ == '__main__':
+    logger.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: Проверка обновлений журнала")
     last_issue_id = read_last_issue_id()
     issues = get_issues()
     new_issue = check_new_issue(issues, last_issue_id)
-    if new_issue:
+    if not new_issue:
+        logger.info("Обновления не обнаружены")
+    else:
         articles = get_articles(new_issue)
         messages = build_messages(articles, new_issue)
         send_msg_tlg(messages)
         write_last_issue_id(new_issue["id"])
+        logger.info("Обновления получены")
